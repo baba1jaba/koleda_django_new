@@ -1,0 +1,55 @@
+{% extends 'shop/base.html' %}
+
+{% block title %}{{ product.name }}{% endblock %}
+
+{% block content %}
+<div class="row mt-5">
+    <div class="col-md-6 mb-4">
+        {% if product.main_image %}
+            <img src="{{ product.main_image.url }}" class="img-fluid rounded shadow" alt="{{ product.name }}">
+        {% else %}
+            <div class="bg-light text-center py-5 rounded">Фото скоро будет</div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-6">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'product_list' %}" class="text-dark">Каталог</a></li>
+                <li class="breadcrumb-item active">{{ product.brand.name }}</li>
+            </ol>
+        </nav>
+
+        <h1 class="display-4 fw-bold">{{ product.name }}</h1>
+        <p class="fs-4 text-muted">{{ product.brand.name }} | {{ product.get_gender_display }}</p>
+        
+        <hr>
+        
+        <h5 class="fw-bold">Об аромате:</h5>
+        <p class="lead text-secondary">{{ product.description }}</p>
+
+        <h5 class="mt-4 fw-bold">Выберите объем:</h5>
+        
+        <form action="{% url 'cart_add_detail' product.id %}" method="POST" class="mt-3">
+            {% csrf_token %}
+            <div class="btn-group mb-4" role="group">
+                {% for variant in product.variants.all %}
+                <input type="radio" class="btn-check" name="variant_id" id="v{{ variant.id }}" value="{{ variant.id }}" {% if forloop.first %}checked{% endif %}>
+                <label class="btn btn-outline-dark px-4 py-2" for="v{{ variant.id }}">
+                    {{ variant.volume }} мл <br>
+                    <strong>{{ variant.price }} руб.</strong>
+                </label>
+                {% endfor %}
+            </div>
+
+            {% if user.is_authenticated %}
+                <button type="submit" class="btn btn-dark btn-lg w-100">Добавить в корзину</button>
+            {% else %}
+                <div class="alert alert-warning text-center">
+                    Чтобы сделать заказ, пожалуйста, <a href="{% url 'login' %}">войдите</a> или <a href="{% url 'signup' %}">зарегистрируйтесь</a>.
+                </div>
+            {% endif %}
+        </form>
+    </div>
+</div>
+{% endblock %}

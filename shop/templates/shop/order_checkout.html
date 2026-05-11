@@ -1,0 +1,35 @@
+{% extends 'shop/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-7">
+        <div class="card shadow-sm border-0 p-4">
+            <h3 class="mb-4">Оформление заказа</h3>
+            <form method="post" novalidate>
+                {% csrf_token %}
+                {{ form|crispy }}
+                <button type="submit" class="btn btn-dark btn-lg w-100 mt-3">Подтвердить заказ</button>
+            </form>
+        </div>
+    </div>
+    <div class="col-md-5">
+        <div class="card shadow-sm border-0 p-4 bg-light">
+            <h4 class="mb-3">Ваш заказ:</h4>
+            <ul class="list-group list-group-flush mb-3">
+                {% for item in cart %}
+                    <li class="list-group-item bg-transparent d-flex justify-content-between p-0 mb-2">
+                        <span>{{ item.variant.product.name }} ({{ item.variant.volume }}мл) x {{ item.quantity }}</span>
+                        <span class="fw-bold">{{ item.total_price }} р.</span>
+                    </li>
+                {% endfor %}
+            </ul>
+            <hr>
+            <h4 class="d-flex justify-content-between">
+                <span>Итого:</span>
+                <span class="text-primary">{{ cart.get_total_price }} р.</span>
+            </h4>
+        </div>
+    </div>
+</div>
+{% endblock %}

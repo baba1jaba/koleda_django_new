@@ -1,0 +1,42 @@
+{% extends 'shop/base.html' %}
+
+{% block title %}Каталог парфюмерии{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="text-center mb-5">Наши ароматы</h1>
+
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        {% for product in products %}
+        <div class="col">
+            <div class="card h-100 shadow-sm border-0">
+                {% if product.main_image %}
+                    <img src="{{ product.main_image.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 300px; object-fit: contain; padding: 10px;">
+                {% else %}
+                    <div class="bg-light text-center py-5" style="height: 300px;">Нет фото</div>
+                {% endif %}
+
+                <div class="card-body text-center">
+                    <h5 class="card-title fw-bold">{{ product.brand.name }}</h5>
+                    <p class="card-text text-muted">{{ product.name }}</p>
+                    
+                    {% with first_variant=product.variants.all|dictsort:"price"|first %}
+                        {% if first_variant %}
+                            <p class="text-primary fs-5 fw-bold">от {{ first_variant.price }} руб.</p>
+                        {% else %}
+                            <p class="text-danger">Нет в наличии</p>
+                        {% endif %}
+                    {% endwith %}
+
+                    <a href="{% url 'product_detail' pk=product.pk %}" class="btn btn-dark w-100 mt-2">Посмотреть</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <h3 class="text-muted">В каталоге пока пусто. Добавьте товары в админке!</h3>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

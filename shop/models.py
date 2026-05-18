@@ -54,7 +54,7 @@ class CartItem(models.Model):
     product_variant = models.ForeignKey(ProductVariant, on_delete=models.CASCADE, verbose_name="Товар (объем)")
     quantity = models.PositiveIntegerField(default=1)
 
-# 6. Заказы (МОДЕРНИЗИРОВАНО)
+# 6. Заказы 
 class Order(models.Model):
     STATUS_CHOICES = [
         ('processing', 'В обработке'),
@@ -63,10 +63,9 @@ class Order(models.Model):
         ('delivered', 'Доставлено'),
     ]
     
-    # Сделали null=True, чтобы заказ не падал, если юзер не залогинен
+  
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Пользователь")
     
-    # НОВЫЕ ПОЛЯ ДЛЯ ОФОРМЛЕНИЯ
     first_name = models.CharField(max_length=50, verbose_name="Имя")
     last_name = models.CharField(max_length=50, verbose_name="Фамилия")
     phone = models.CharField(max_length=20, verbose_name="Телефон")
@@ -92,7 +91,7 @@ class OrderItem(models.Model):
     def __str__(self):
         return f"{self.product_variant} ({self.quantity} шт.)"
 
-# 7. Отзывы
+# 7. Отзывы cveuiunvw[a.]
 class Comment(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='comments')
     user = models.ForeignKey(User, on_delete=models.CASCADE)

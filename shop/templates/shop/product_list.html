@@ -4,39 +4,167 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h1 class="text-center mb-5">Наши ароматы</h1>
+    <h1 class="text-center mb-5 fw-bold">Наши ароматы</h1>
 
-    <div class="row row-cols-1 row-cols-md-3 g-4">
-        {% for product in products %}
-        <div class="col">
-            <div class="card h-100 shadow-sm border-0">
-                {% if product.main_image %}
-                    <img src="{{ product.main_image.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 300px; object-fit: contain; padding: 10px;">
-                {% else %}
-                    <div class="bg-light text-center py-5" style="height: 300px;">Нет фото</div>
-                {% endif %}
-
-                <div class="card-body text-center">
-                    <h5 class="card-title fw-bold">{{ product.brand.name }}</h5>
-                    <p class="card-text text-muted">{{ product.name }}</p>
+    <div class="row">
+        <div class="col-md-3 mb-4">
+            <div class="card p-4 shadow-sm border-0 bg-light sticky-top" style="top: 20px; z-index: 100;">
+                <h4 class="fw-bold mb-4">Фильтры</h4>
+                
+                <form method="GET" action="{% url 'product_list' %}">
                     
-                    {% with first_variant=product.variants.all|dictsort:"price"|first %}
-                        {% if first_variant %}
-                            <p class="text-primary fs-5 fw-bold">от {{ first_variant.price }} руб.</p>
-                        {% else %}
-                            <p class="text-danger">Нет в наличии</p>
-                        {% endif %}
-                    {% endwith %}
+                    <div class="mb-4">
+                        <h6 class="fw-bold text-dark">Цена, руб.</h6>
+                        <div class="d-flex gap-2">
+                            <input type="number" name="price_min" class="form-control form-control-sm" placeholder="от" value="{{ price_min|default:'' }}">
+                            <input type="number" name="price_max" class="form-control form-control-sm" placeholder="до" value="{{ price_max|default:'' }}">
+                        </div>
+                    </div>
+                    
+                    <hr class="my-3">
 
-                    <a href="{% url 'product_detail' pk=product.pk %}" class="btn btn-dark w-100 mt-2">Посмотреть</a>
-                </div>
+                    <div class="mb-4">
+                        <h6 class="fw-bold text-dark">Бренды</h6>
+                        <div style="max-height: 150px; overflow-y: auto; padding-right: 5px;">
+                            {% for brand in brands %}
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="brand" value="{{ brand.id }}" id="brand_{{ brand.id }}"
+                                       {% if brand.id in selected_brands %}checked{% endif %}>
+                                <label class="form-check-label text-secondary small" for="brand_{{ brand.id }}">
+                                    {{ brand.name }}
+                                </label>
+                            </div>
+                            {% empty %}
+                            <p class="text-muted small italic">Бренды не найдены</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <hr class="my-3">
+
+                    <div class="mb-4">
+                        <h6 class="fw-bold text-dark">Тип аромата</h6>
+                        <div style="max-height: 150px; overflow-y: auto; padding-right: 5px;">
+                            {% for scent in scent_types %}
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="scent" value="{{ scent.id }}" id="scent_{{ scent.id }}"
+                                       {% if scent.id in selected_scents %}checked{% endif %}>
+                                <label class="form-check-label text-secondary small" for="scent_{{ scent.id }}">
+                                    {{ scent.name }}
+                                </label>
+                            </div>
+                            {% empty %}
+                            <p class="text-muted small italic">Типы не найдены</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <hr class="my-3">
+
+                    <div class="mb-4">
+                        <h6 class="fw-bold text-dark">Для кого</h6>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" name="gender" value="women" id="gender_women"
+                                   {% if 'women' in selected_genders %}checked{% endif %}>
+                            <label class="form-check-label text-secondary small" for="gender_women">
+                                Для женщин
+                            </label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" name="gender" value="men" id="gender_men"
+                                   {% if 'men' in selected_genders %}checked{% endif %}>
+                            <label class="form-check-label text-secondary small" for="gender_men">
+                                Для мужчин
+                            </label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" name="gender" value="unisex" id="gender_unisex"
+                                   {% if 'unisex' in selected_genders %}checked{% endif %}>
+                            <label class="form-check-label text-secondary small" for="gender_unisex">
+                                Унисекс
+                            </label>
+                        </div>
+                    </div>
+
+                    <hr class="my-3">
+
+                    <div class="mb-4">
+                        <h6 class="fw-bold text-dark">Средний рейтинг</h6>
+                        <div class="d-flex align-items-center gap-2">
+                            <select name="rating_min" class="form-select form-select-sm">
+                                <option value="">От</option>
+                                <option value="1" {% if rating_min == "1" %}selected{% endif %}>1 ★</option>
+                                <option value="2" {% if rating_min == "2" %}selected{% endif %}>2 ★</option>
+                                <option value="3" {% if rating_min == "3" %}selected{% endif %}>3 ★</option>
+                                <option value="4" {% if rating_min == "4" %}selected{% endif %}>4 ★</option>
+                                <option value="5" {% if rating_min == "5" %}selected{% endif %}>5 ★</option>
+                            </select>
+                            <span class="text-muted">—</span>
+                            <select name="rating_max" class="form-select form-select-sm">
+                                <option value="">До</option>
+                                <option value="1" {% if rating_max == "1" %}selected{% endif %}>1 ★</option>
+                                <option value="2" {% if rating_max == "2" %}selected{% endif %}>2 ★</option>
+                                <option value="3" {% if rating_max == "3" %}selected{% endif %}>3 ★</option>
+                                <option value="4" {% if rating_max == "4" %}selected{% endif %}>4 ★</option>
+                                <option value="5" {% if rating_max == "5" %}selected{% endif %}>5 ★</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-dark w-100 mb-2">Применить</button>
+                    <a href="{% url 'product_list' %}" class="btn btn-outline-secondary w-100 btn-sm">Сбросить параметры</a>
+                </form>
             </div>
         </div>
-        {% empty %}
-        <div class="col-12 text-center py-5">
-            <h3 class="text-muted">В каталоге пока пусто. Добавьте товары в админке!</h3>
+
+        <div class="col-md-9">
+            <div class="row row-cols-1 row-cols-md-3 g-4">
+                {% for product in products %}
+                <div class="col">
+                    <div class="card h-100 shadow-sm border-0">
+                        {% if product.main_image %}
+                            <img src="{{ product.main_image.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 300px; object-fit: contain; padding: 10px;">
+                        {% else %}
+                            <div class="bg-light text-center py-5" style="height: 300px;">Нет фото</div>
+                        {% endif %}
+
+                        <div class="card-body text-center d-flex flex-column justify-content-between">
+                            <div>
+                                <h5 class="card-title fw-bold text-dark mb-1">{{ product.brand.name }}</h5>
+                                <p class="card-text text-muted small mb-2">{{ product.name }}</p>
+                                
+                                {% if product.average_rating %}
+                                    <div class="mb-3 text-warning small fw-bold">
+                                        ⭐ {{ product.average_rating|floatformat:1 }} / 5.0
+                                    </div>
+                                {% else %}
+                                    <div class="mb-3 text-muted small italic" style="font-size: 0.85rem;">
+                                        Нет отзывов
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div>
+                                {% with first_variant=product.variants.all|dictsort:"price"|first %}
+                                    {% if first_variant %}
+                                        <p class="text-primary fs-5 fw-bold mb-2">от {{ first_variant.price }} руб.</p>
+                                    {% else %}
+                                        <p class="text-danger mb-2">Нет в наличии</p>
+                                    {% endif %}
+                                {% endwith %}
+
+                                <a href="{% url 'product_detail' pk=product.pk %}" class="btn btn-dark w-100 mt-2">Посмотреть</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12 text-center py-5">
+                    <h4 class="text-muted">Ничего не найдено по выбранным фильтрам</h4>
+                </div>
+                {% endfor %}
+            </div>
         </div>
-        {% endfor %}
     </div>
 </div>
 {% endblock %}

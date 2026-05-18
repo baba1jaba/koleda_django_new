@@ -2,33 +2,63 @@
 {% load crispy_forms_tags %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-7">
-        <div class="card shadow-sm border-0 p-4">
-            <h3 class="mb-4">Оформление заказа</h3>
-            <form method="post" novalidate>
-                {% csrf_token %}
-                {{ form|crispy }}
-                <button type="submit" class="btn btn-dark btn-lg w-100 mt-3">Подтвердить заказ</button>
-            </form>
-        </div>
-    </div>
-    <div class="col-md-5">
-        <div class="card shadow-sm border-0 p-4 bg-light">
-            <h4 class="mb-3">Ваш заказ:</h4>
-            <ul class="list-group list-group-flush mb-3">
-                {% for item in cart %}
-                    <li class="list-group-item bg-transparent d-flex justify-content-between p-0 mb-2">
-                        <span>{{ item.variant.product.name }} ({{ item.variant.volume }}мл) x {{ item.quantity }}</span>
-                        <span class="fw-bold">{{ item.total_price }} р.</span>
-                    </li>
+<div class="container mt-4">
+    {% if messages %}
+        <div class="row mb-3">
+            <div class="col-12">
+                {% for message in messages %}
+                    <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show shadow-sm border-0" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
                 {% endfor %}
-            </ul>
-            <hr>
-            <h4 class="d-flex justify-content-between">
-                <span>Итого:</span>
-                <span class="text-primary">{{ cart.get_total_price }} р.</span>
-            </h4>
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="row">
+        <div class="col-md-7">
+            <div class="card shadow-sm border-0 p-4">
+                <h3 class="mb-4 fw-bold text-dark">Оформление заказа</h3>
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <button type="submit" class="btn btn-dark btn-lg w-100 mt-3 shadow-sm">Подтвердить заказ</button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="col-md-5">
+            <div class="card shadow-sm border-0 p-4 bg-light sticky-top" style="top: 20px;">
+                <h4 class="mb-3 fw-bold text-dark">Ваш заказ:</h4>
+                <ul class="list-group list-group-flush mb-3">
+                    {% for item in cart %}
+                        <li class="list-group-item bg-transparent d-flex justify-content-between align-items-start p-0 mb-3 border-0">
+                            <div class="me-2">
+                                <span class="fw-medium text-dark d-block">
+                                    {{ item.variant.product.brand.name }} — {{ item.variant.product.name }}
+                                </span>
+                                <small class="text-muted">
+                                    Объем: {{ item.variant.volume }} мл × {{ item.quantity }} шт.
+                                </small>
+                            </div>
+                            <span class="fw-bold text-dark text-nowrap">
+                                {{ item.total_price }} р.
+                            </span>
+                        </li>
+                    {% empty %}
+                        <li class="list-group-item bg-transparent text-muted italic p-0 border-0">
+                            Ваша корзина пуста
+                        </li>
+                    {% endfor %}
+                </ul>
+                <hr class="my-3">
+                <h4 class="d-flex justify-content-between align-items-center mb-0">
+                    <span class="fw-bold text-dark">Итого:</span>
+                    <span class="text-primary fw-extrabold fs-3">{{ cart.get_total_price }} р.</span>
+                </h4>
+            </div>
         </div>
     </div>
 </div>

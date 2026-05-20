@@ -63,13 +63,7 @@
                 {% endfor %}
             </div>
 
-            {% if user.is_authenticated %}
-                <button type="submit" class="btn btn-dark btn-lg w-100">Добавить в корзину</button>
-            {% else %}
-                <div class="alert alert-warning text-center">
-                    Чтобы сделать заказ, пожалуйста, <a href="{% url 'login' %}">войдите</a> или <a href="{% url 'signup' %}">зарегистрируйтесь</a>.
-                </div>
-            {% endif %}
+          <button type="submit" class="btn btn-dark btn-lg w-100">Добавить в корзину</button>
         </form>
     </div>
 </div>

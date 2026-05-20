@@ -91,7 +91,7 @@ class OrderItem(models.Model):
     def __str__(self):
         return f"{self.product_variant} ({self.quantity} шт.)"
 
-# 7. Отзывы cveuiunvw[a.]
+# 7. Отзывы 
 class Comment(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='comments')
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -100,3 +100,12 @@ class Comment(models.Model):
         validators=[MinValueValidator(1), MaxValueValidator(5)], 
         verbose_name="Оценка"
     )
+
+# 8. Профиль пользователя
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    phone = models.CharField(max_length=20, blank=True, null=True, verbose_name="Телефон")
+    address = models.CharField(max_length=255, blank=True, null=True, verbose_name="Адрес доставки")
+
+    def __str__(self):
+        return f"Профиль для {self.user.username}"

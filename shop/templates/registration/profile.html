@@ -1,0 +1,186 @@
+{% extends 'shop/base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    {% if messages %}
+        <div class="row mb-4">
+            <div class="col-12">
+                {% for message in messages %}
+                    <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show rounded-3 shadow-sm" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="mb-5">
+        <h1 class="fw-bold text-uppercase tracking-wider">Личный кабинет</h1>
+        <p class="text-muted fs-5">Привет, <span class="fw-bold text-dark">{{ user.username }}</span>! {% if user.is_staff %}<span class="badge bg-dark ms-2">Администратор</span>{% endif %}</p>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="card h-100 shadow-sm border-0 p-4 bg-white rounded-3">
+                <h4 class="fw-bold mb-4 border-bottom pb-2">Профиль</h4>
+                
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    {% for field in form %}
+                        {# МОДЕРНИЗАЦИЯ: Добавляем разделитель перед полем нового пароля для лучшего UX #}
+                        {% if field.name == 'new_password' %}
+                            <hr class="text-muted my-4">
+                            <h5 class="fw-bold mb-3 text-dark" style="font-size: 1rem; letter-spacing: 0.5px;">Безопасность</h5>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label for="{{ field.id_for_label }}" class="form-label small fw-bold text-muted">
+                                {{ field.label }}
+                            </label>
+                            
+                            {# Контейнер для красивой подсветки ошибок #}
+                            <div class="{% if field.errors %}is-invalid-container{% endif %}">
+                                {{ field }}
+                            </div>
+                            
+                            {% if field.errors %}
+                                <div class="invalid-feedback d-block mt-1">
+                                    {{ field.errors|join:", " }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+
+                    <button type="submit" name="update_profile" class="btn btn-dark w-100 py-2 rounded-2 fw-medium mt-3">
+                        Сохранить изменения
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card h-100 shadow-sm border-0 p-4 bg-white rounded-3">
+                {% if user.is_staff %}
+                    <h4 class="fw-bold mb-4 border-bottom pb-2">Управление заказами пользователей</h4>
+                {% else %}
+                    <h4 class="fw-bold mb-4 border-bottom pb-2">История ваших заказов</h4>
+                {% endif %}
+
+                {% if orders %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light text-muted small uppercase">
+                                <tr>
+                                    <th>№ Заказа</th>
+                                    {% if user.is_staff %}<th>Покупатель</th>{% endif %}
+                                    <th>Содержимое заказа</th>
+                                    <th>Адрес доставки</th> 
+                                    <th>Дата</th>
+                                    <th>Сумма</th>
+                                    <th style="min-width: 170px;">Статус</th>
+                                    {% if not user.is_staff %}<th class="text-end">Действие</th>{% endif %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in orders %}
+                                <tr>
+                                    <td class="fw-bold">#{{ order.id }}</td>
+                                    
+                                    {% if user.is_staff %}
+                                        <td>{{ order.user.username }}</td>
+                                    {% endif %}
+                                    
+                                    <td>
+                                        <ul class="list-unstyled mb-0 small">
+                                            {% for item in order.items.all %}
+                                            <li class="mb-1 text-nowrap">
+                                                <span class="fw-medium text-dark">{{ item.product_variant.product.brand.name }} {{ item.product_variant.product.name }}</span> 
+                                                <span class="text-muted">({{ item.product_variant.volume }} мл)</span> 
+                                                <span class="badge bg-light text-dark border ms-1">{{ item.quantity }} шт.</span>
+                                            </li> {# ТУТ ИСПРАВЛЕНО: Было </td>, теперь корректно закрывается список </li> #}
+                                            {% endfor %}
+                                        </ul>
+                                    </td>
+                                    
+                                    <td class="small text-secondary" style="max-width: 200px; word-break: break-word;">
+                                        {{ order.address|default:"Не указан" }}
+                                    </td>
+                                    
+                                    <td class="text-muted text-nowrap">{{ order.created_at|date:"d.m.Y H:i" }}</td>
+                                    <td class="fw-medium text-nowrap">{{ order.total_price }} руб.</td>
+                                    
+                                    <td>
+                                        {% if user.is_staff %}
+                                            <form method="post" class="d-flex gap-1 text-nowrap align-items-center">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="order_id" value="{{ order.id }}">
+                                                <select name="status" class="form-select form-select-sm border-dark-subtle">
+                                                    {% for code, name in order_statuses %}
+                                                        <option value="{{ code }}" {% if order.status == code %}selected{% endif %}>{{ name }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                                <button type="submit" name="update_status" class="btn btn-sm btn-dark px-2" title="Обновить статус">✓</button>
+                                            </form>
+                                        {% else %}
+                                            {% if order.status == 'new' or order.status == 'pending' %}
+                                                <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary px-3 py-2 text-uppercase fs-xs tracking-wider">
+                                                    {{ order.get_status_display }}
+                                                </span>
+                                            {% elif order.status == 'completed' %}
+                                                <span class="badge rounded-pill bg-success bg-opacity-10 text-success px-3 py-2 text-uppercase fs-xs tracking-wider">
+                                                    {{ order.get_status_display }}
+                                                </span>
+                                            {% else %}
+                                                <span class="badge rounded-pill bg-dark bg-opacity-10 text-dark px-3 py-2 text-uppercase fs-xs tracking-wider">
+                                                    {{ order.get_status_display }}
+                                                </span>
+                                            {% endif %}
+                                        {% endif %}
+                                    </td>
+
+                                    {% if not user.is_staff %}
+                                    <td class="text-end">
+                                        <a href="{% url 'order_repeat' order.id %}" class="btn btn-outline-dark btn-sm rounded-2 text-nowrap">
+                                            <i class="bi bi-arrow-clockwise me-1"></i> Повторить
+                                        </a>
+                                    </td>
+                                    {% endif %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5 text-muted">
+                        <i class="bi bi-box-seam display-4 mb-3 d-block text-body-secondary"></i>
+                        <p class="lead mb-0">Заказов пока нет.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .tracking-wider { letter-spacing: 1px; }
+    .fs-xs { font-size: 0.72rem; font-weight: 700; }
+    .table th { font-weight: 600; font-size: 0.85rem; letter-spacing: 0.5px; }
+    .form-control:focus, .form-select:focus {
+        border-color: #000;
+        box-shadow: 0 0 0 0.15rem rgba(0, 0, 0, 0.1);
+    }
+    .invalid-feedback {
+        font-size: 0.8rem;
+        margin-top: 0.25rem;
+    }
+    .is-invalid-container .form-control {
+        border-color: #dc3545;
+    }
+    .is-invalid-container .form-control:focus {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.15rem rgba(220, 53, 69, 0.25);
+    }
+</style>
+{% endblock %}

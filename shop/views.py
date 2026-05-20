@@ -6,9 +6,9 @@ from django.db.models import Avg, Q
 from django.db import transaction 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import update_session_auth_hash  # Добавлен импорт для безопасной смены пароля
+from django.contrib.auth import update_session_auth_hash  
 
-from .models import Product, Comment, OrderItem, ProductVariant, Brand, ScentType, Order, Profile  # Добавлен импорт Profile
+from .models import Product, Comment, OrderItem, ProductVariant, Brand, ScentType, Order, Profile  
 from .cart import Cart
 from .forms import OrderCreateForm, CommentForm, UserProfileForm
 
@@ -125,7 +125,6 @@ def order_create(request):
     cart = Cart(request)
     user = request.user
 
-    # ЗАЩИТА ОТ ПУСТОЙ КОРЗИНЫ: разворачиваем на страницу корзины и выводим ошибку
     if not cart or len(cart) == 0:
         messages.error(request, "Ваша корзина пуста! Добавьте товары, прежде чем оформлять заказ.")
         return redirect('cart_detail')
@@ -156,7 +155,6 @@ def order_create(request):
                     user.last_name = form.cleaned_data.get('last_name')
                     user.save()
 
-                    # Гарантируем существование профиля при оформлении заказа
                     profile, created = Profile.objects.get_or_create(user=user)
                     profile.phone = order.phone      
                     profile.address = order.address  
